@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机器学习实验讲义导航</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .nav-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: #333;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+        }
+
+        .chapter-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .nav-card h3 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .nav-card p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .nav-card .arrow {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #4CAF50;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-card:hover .arrow {
+            transform: translateY(-50%) translateX(5px);
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+            opacity: 0.8;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            display: block;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                gap: 20px;
+            }
+            
+            .stat-number {
+                font-size: 2em;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回顶部按钮 -->
+    <div id="backToTop" style="
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        opacity: 0;
+        transform: translateY(20px);
+    ">
+        <span style="color: white; font-size: 20px; font-weight: bold;">↑</span>
+    </div>
+
+    <div class="container">
+        <div class="header fade-in">
+            <h1>🤖 人工智能实验讲义</h1>
+            <p>Artificial Intelligence Laboratory Tutorials</p>
+            <p class="subtitle">从基础编程到深度学习，系统掌握AI核心技术</p>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-number">12</span>
+                    <span class="stat-label">章节</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">10</span>
+                    <span class="stat-label">实验</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">∞</span>
+                    <span class="stat-label">可能性</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-grid">
+            <a href="1 第一章 python基础/python_tutorial.html" class="nav-card fade-in">
+                <div class="chapter-number">第一章</div>
+                <h3>Python编程基础</h3>
+                <p>掌握Python语言基础，为机器学习打下坚实的编程基础。包括数据类型、控制结构、函数定义等核心概念。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="2 第二章 A星算法/第二章 A星算法实验.html" class="nav-card fade-in">
+                <div class="chapter-number">第二章</div>
+                <h3>A*搜索算法</h3>
+                <p>学习经典的启发式搜索算法，理解人工智能中路径规划的基本原理和实现方法。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="3 第三章 回归分析/第三章 回归分析实验.html" class="nav-card fade-in">
+                <div class="chapter-number">第三章</div>
+                <h3>回归分析</h3>
+                <p>探索线性回归和多项式回归，学习如何建立数据之间的数学关系模型。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="4 第四章 线性判别分析/第四章 线性判别分析实验.html" class="nav-card fade-in">
+                <div class="chapter-number">第四章</div>
+                <h3>线性判别分析</h3>
+                <p>学习经典的分类算法，理解如何通过线性变换实现数据的有效分类。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="5 第五章 Adaboosting/第五章 AdaBoosting算法教学网页.html" class="nav-card fade-in">
+                <div class="chapter-number">第五章</div>
+                <h3>AdaBoost算法</h3>
+                <p>掌握集成学习的经典算法，学习如何通过弱学习器的组合构建强分类器。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="6 第六章 支持向量机/第六章 支持向量机教学网页.html" class="nav-card fade-in">
+                <div class="chapter-number">第六章</div>
+                <h3>支持向量机</h3>
+                <p>学习强大的分类和回归算法，理解核技巧和最大间隔分类的核心思想。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="7 第七章 决策树/第七章 决策树实验讲义.html" class="nav-card fade-in">
+                <div class="chapter-number">第七章</div>
+                <h3>决策树算法</h3>
+                <p>探索直观易懂的分类算法，学习信息增益、剪枝等关键概念。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="8 第八章 K-means聚类/第八章 K-means聚类教学网页.html" class="nav-card fade-in">
+                <div class="chapter-number">第八章</div>
+                <h3>K-means聚类</h3>
+                <p>学习无监督学习的经典算法，掌握数据聚类和模式发现的基本方法。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="9 第九章 特征脸/第九章 特征脸方法实验讲义.html" class="nav-card fade-in">
+                <div class="chapter-number">第九章</div>
+                <h3>特征脸方法</h3>
+                <p>探索人脸识别的经典方法，学习主成分分析在图像处理中的应用。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="10 第十章 局部线性嵌入/LLE实验结果展示.html" class="nav-card fade-in">
+                <div class="chapter-number">第十章</div>
+                <h3>局部线性嵌入</h3>
+                <p>学习非线性降维技术，理解流形学习在高维数据处理中的重要作用。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="11 第十一章 卷积神经网络/cnn_teaching_webpage.html" class="nav-card fade-in">
+                <div class="chapter-number">第十一章</div>
+                <h3>卷积神经网络</h3>
+                <p>深入学习深度学习的核心技术，掌握图像识别和计算机视觉的基础。</p>
+                <div class="arrow">→</div>
+            </a>
+
+            <a href="12 第十二章 循环神经网络/rnn_tutorial.html" class="nav-card fade-in">
+                <div class="chapter-number">第十二章</div>
+                <h3>循环神经网络</h3>
+                <p>探索序列数据处理的强大工具，学习时间序列分析和自然语言处理基础。</p>
+                <div class="arrow">→</div>
+            </a>
+        </div>
+
+        <!-- 讲义特色介绍 -->
+        <div class="features-section fade-in" style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 30px; margin: 40px 0; color: white;">
+            <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em;">📚 讲义特色</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">🎯</div>
+                    <h3>理论与实践并重</h3>
+                    <p>每章都包含详细的理论讲解和完整的代码实现，确保学以致用</p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">🔬</div>
+                    <h3>交互式实验</h3>
+                    <p>提供可视化的实验界面，直观展示算法效果和参数影响</p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">📈</div>
+                    <h3>循序渐进</h3>
+                    <p>从Python基础到深度学习，知识体系完整，难度递进合理</p>
+                </div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">💡</div>
+                    <h3>实际应用导向</h3>
+                    <p>结合真实数据集和应用场景，培养解决实际问题的能力</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI学习资源链接 -->
+        <div class="ai-resources-section fade-in" style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 30px; margin: 40px 0; color: white;">
+            <h2 style="text-align: center; margin-bottom: 30px; font-size: 2em;">🌐 推荐AI学习资源</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🎓</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">Coursera - 机器学习专项课程</h3>
+                    <p style="color: #666; font-size: 0.9em;">Andrew Ng教授的经典机器学习课程，系统学习ML基础理论</p>
+                </a>
+                
+                <a href="https://www.kaggle.com/learn" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🏆</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">Kaggle Learn</h3>
+                    <p style="color: #666; font-size: 0.9em;">免费的数据科学和机器学习微课程，实战导向</p>
+                </a>
+                
+                <a href="https://www.fast.ai/" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🚀</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">Fast.ai</h3>
+                    <p style="color: #666; font-size: 0.9em;">实用的深度学习课程，注重实际应用和快速上手</p>
+                </a>
+                
+                <a href="https://pytorch.org/tutorials/" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🔥</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">PyTorch官方教程</h3>
+                    <p style="color: #666; font-size: 0.9em;">深度学习框架PyTorch的官方学习资源和教程</p>
+                </a>
+                
+                <a href="https://www.tensorflow.org/learn" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🧠</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">TensorFlow学习中心</h3>
+                    <p style="color: #666; font-size: 0.9em;">Google开源的机器学习平台，提供完整的学习路径</p>
+                </a>
+                
+                <a href="https://huggingface.co/learn" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🤗</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">Hugging Face课程</h3>
+                    <p style="color: #666; font-size: 0.9em;">自然语言处理和Transformers模型的专业学习平台</p>
+                </a>
+                
+                <a href="https://www.deeplearning.ai/" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🎯</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">DeepLearning.AI</h3>
+                    <p style="color: #666; font-size: 0.9em;">Andrew Ng创立的深度学习教育平台，提供专业AI课程</p>
+                </a>
+                
+                <a href="https://paperswithcode.com/" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">📄</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">Papers With Code</h3>
+                    <p style="color: #666; font-size: 0.9em;">机器学习论文和代码实现的综合资源库</p>
+                </a>
+                
+                <a href="https://www.edx.org/learn/artificial-intelligence" target="_blank" class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block;">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🎓</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">edX - AI课程</h3>
+                    <p style="color: #666; font-size: 0.9em;">MIT、哈佛等顶尖大学的人工智能课程，学术性强</p>
+                </a>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                <h3 style="margin-bottom: 15px;">💡 学习建议</h3>
+                <p style="font-size: 0.95em; line-height: 1.6;">建议结合本讲义的理论学习，配合上述平台的实践练习，形成完整的AI学习体系。先掌握基础概念，再通过项目实战加深理解。</p>
+            </div>
+        </div>
+
+        <div class="footer fade-in">
+            <p>© 2024 人工智能实验讲义 | 开启你的AI学习之旅</p>
+        </div>
+    </div>
+
+    <script>
+        // 添加动画效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.nav-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+
+        // 添加点击效果
+        document.querySelectorAll('.nav-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // 创建点击波纹效果
+                const ripple = document.createElement('div');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(76, 175, 80, 0.3);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.6s ease-out;
+                    pointer-events: none;
+                `;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+            
+            .resource-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+                background: rgba(255,255,255,0.95) !important;
+            }
+        `;
+        document.head.appendChild(style);
+
+
+
+        // 返回顶部按钮功能
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        // 监听滚动事件
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.opacity = '1';
+                backToTopBtn.style.transform = 'translateY(0)';
+            } else {
+                backToTopBtn.style.opacity = '0';
+                backToTopBtn.style.transform = 'translateY(20px)';
+            }
+        });
+        
+        // 点击返回顶部
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // 悬停效果
+        backToTopBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(0) scale(1.1)';
+            this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+        });
+        
+        backToTopBtn.addEventListener('mouseleave', function() {
+            this.style.transform = window.pageYOffset > 300 ? 'translateY(0) scale(1)' : 'translateY(20px) scale(1)';
+            this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+        });
+    </script>
+</body>
+</html>
