@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A*算法交互式教学平台</title>
+    <!-- MathJax CDN -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    MathJax.startup.promise.then(() => {
+                        console.log('MathJax initial typesetting complete');
+                    });
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         * {
             margin: 0;
@@ -463,18 +481,18 @@
 
                     <h3>📊 评估函数</h3>
                     <div class="formula">
-                        f(n) = g(n) + h(n)
-                        <br><br>
-                        • g(n): 从起点到当前节点的实际代价<br>
-                        • h(n): 从当前节点到目标的估计代价（启发函数）<br>
-                        • f(n): 节点的综合评估代价
+                        $$f(n) = g(n) + h(n)$$
+                        <br>
+                        • $g(n)$: 从起点到当前节点的实际代价<br>
+                        • $h(n)$: 从当前节点到目标的估计代价（启发函数）<br>
+                        • $f(n)$: 节点的综合评估代价
                     </div>
 
                     <h3>🔄 算法流程</h3>
                     <div class="algorithm-steps">
                         <ol>
-                            <li><strong>初始化：</strong>将起点加入开放列表，设置g(n)=0</li>
-                            <li><strong>选择节点：</strong>从开放列表中选择f(n)最小的节点</li>
+                            <li><strong>初始化：</strong>将起点加入开放列表，设置$g(n)=0$</li>
+                            <li><strong>选择节点：</strong>从开放列表中选择$f(n)$最小的节点</li>
                             <li><strong>目标检测：</strong>如果是目标节点，回溯路径并结束</li>
                             <li><strong>扩展邻居：</strong>生成所有可达的邻接节点</li>
                             <li><strong>更新代价：</strong>计算邻居节点的g、h、f值</li>
@@ -495,19 +513,19 @@
                         <tbody>
                             <tr>
                                 <td>曼哈顿距离</td>
-                                <td>|x₁-x₂| + |y₁-y₂|</td>
+                                <td>$|x_1-x_2| + |y_1-y_2|$</td>
                                 <td>网格地图</td>
                                 <td>计算简单，可采纳</td>
                             </tr>
                             <tr>
                                 <td>欧几里得距离</td>
-                                <td>√[(x₁-x₂)² + (y₁-y₂)²]</td>
+                                <td>$\sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}$</td>
                                 <td>连续空间</td>
                                 <td>更精确但计算复杂</td>
                             </tr>
                             <tr>
                                 <td>对角线距离</td>
-                                <td>max(|x₁-x₂|, |y₁-y₂|)</td>
+                                <td>$\max(|x_1-x_2|, |y_1-y_2|)$</td>
                                 <td>8方向移动</td>
                                 <td>平衡精度与效率</td>
                             </tr>
@@ -816,7 +834,7 @@ if __name__ == "__main__":
                     <h2>🎯 A*算法知识测试</h2>
                     
                     <div class="quiz-container">
-                        <div class="quiz-question">1. A*算法的评估函数f(n) = g(n) + h(n)中，h(n)代表什么？</div>
+                        <div class="quiz-question">1. A*算法的评估函数$f(n) = g(n) + h(n)$中，$h(n)$代表什么？</div>
                         <ul class="quiz-options" data-answer="2">
                             <li onclick="selectAnswer(this, 0)">A. 从起点到当前节点的实际代价</li>
                             <li onclick="selectAnswer(this, 1)">B. 从当前节点到起点的估计代价</li>
@@ -826,12 +844,12 @@ if __name__ == "__main__":
                     </div>
 
                     <div class="quiz-container">
-                        <div class="quiz-question">2. 为了保证A*算法找到最优解，启发函数h(n)必须满足什么条件？</div>
+                        <div class="quiz-question">2. 为了保证A*算法找到最优解，启发函数$h(n)$必须满足什么条件？</div>
                         <ul class="quiz-options" data-answer="1">
-                            <li onclick="selectAnswer(this, 0)">A. h(n)必须等于实际代价</li>
-                            <li onclick="selectAnswer(this, 1)">B. h(n)必须不高估实际代价（可采纳性）</li>
-                            <li onclick="selectAnswer(this, 2)">C. h(n)必须高估实际代价</li>
-                            <li onclick="selectAnswer(this, 3)">D. h(n)可以是任意值</li>
+                            <li onclick="selectAnswer(this, 0)">A. $h(n)$必须等于实际代价</li>
+                            <li onclick="selectAnswer(this, 1)">B. $h(n)$必须不高估实际代价（可采纳性）</li>
+                            <li onclick="selectAnswer(this, 2)">C. $h(n)$必须高估实际代价</li>
+                            <li onclick="selectAnswer(this, 3)">D. $h(n)$可以是任意值</li>
                         </ul>
                     </div>
 
