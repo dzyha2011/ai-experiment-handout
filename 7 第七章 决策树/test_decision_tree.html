@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>决策树交互测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .control-panel {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .parameter-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .tree-structure {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌳 决策树交互演示</h1>
+    
+    <div class="control-panel">
+        <h3>参数控制</h3>
+        
+        <div class="parameter-group">
+            <label for="criterion">分裂标准:</label>
+            <select id="criterion">
+                <option value="gini">基尼系数 (Gini)</option>
+                <option value="entropy">信息熵 (Entropy)</option>
+            </select>
+        </div>
+        
+        <div class="parameter-group">
+            <label for="maxDepth">最大深度: <span id="maxDepthValue">3</span></label>
+            <input type="range" id="maxDepth" min="1" max="8" value="3">
+        </div>
+        
+        <div class="parameter-group">
+            <label for="minSamplesSplit">最小分裂样本数: <span id="minSamplesSplitValue">2</span></label>
+            <input type="range" id="minSamplesSplit" min="2" max="20" value="2">
+        </div>
+        
+        <div class="parameter-group">
+            <label for="minSamplesLeaf">最小叶节点样本数: <span id="minSamplesLeafValue">1</span></label>
+            <input type="range" id="minSamplesLeaf" min="1" max="15" value="1">
+        </div>
+        
+        <button onclick="updateDecisionTree()">🔄 重新训练决策树</button>
+    </div>
+    
+    <div class="results">
+        <div class="metric-card">
+            <div class="metric-value" id="trainAccuracy">-</div>
+            <div class="metric-label">训练准确率</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="testAccuracy">-</div>
+            <div class="metric-label">测试准确率</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="treeDepth">-</div>
+            <div class="metric-label">实际深度</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="leafNodes">-</div>
+            <div class="metric-label">叶节点数</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value" id="trainTime">-</div>
+            <div class="metric-label">训练时间</div>
+        </div>
+    </div>
+    
+    <div id="overfittingWarning" class="alert alert-warning" style="display: none;">
+        ⚠️ <strong>过拟合警告:</strong> 训练准确率明显高于测试准确率，建议增大min_samples_split或min_samples_leaf参数。
+    </div>
+    
+    <div id="underfittingWarning" class="alert alert-info" style="display: none;">
+        ℹ️ <strong>欠拟合提示:</strong> 准确率较低，可以尝试增加max_depth或减小min_samples参数。
+    </div>
+    
+    <h3>🌳 决策树结构</h3>
+    <div id="treeStructure" class="tree-structure">
+        请点击"重新训练决策树"按钮生成树结构
+    </div>
+
+    <script>
+        // 参数控制
+        document.getElementById('maxDepth').addEventListener('input', function() {
+            document.getElementById('maxDepthValue').textContent = this.value;
+        });
+        
+        document.getElementById('minSamplesSplit').addEventListener('input', function() {
+            document.getElementById('minSamplesSplitValue').textContent = this.value;
+        });
+        
+        document.getElementById('minSamplesLeaf').addEventListener('input', function() {
+            document.getElementById('minSamplesLeafValue').textContent = this.value;
+        });
+
+        // 调用Python后端训练决策树
+        async function trainDecisionTree(params) {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/train_tree', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('训练决策树失败:', error);
+                return null;
+            }
+        }
+        
+        // 更新决策树
+        async function updateDecisionTree() {
+            // 更新参数显示
+            const maxDepth = parseInt(document.getElementById('maxDepth').value);
+            const minSamplesSplit = parseInt(document.getElementById('minSamplesSplit').value);
+            const minSamplesLeaf = parseInt(document.getElementById('minSamplesLeaf').value);
+            const criterion = document.getElementById('criterion').value;
+            
+            document.getElementById('maxDepthValue').textContent = maxDepth;
+            document.getElementById('minSamplesSplitValue').textContent = minSamplesSplit;
+            document.getElementById('minSamplesLeafValue').textContent = minSamplesLeaf;
+            
+            // 显示加载状态
+            document.getElementById('trainAccuracy').textContent = '训练中...';
+            document.getElementById('testAccuracy').textContent = '训练中...';
+            document.getElementById('treeDepth').textContent = '训练中...';
+            document.getElementById('leafNodes').textContent = '训练中...';
+            document.getElementById('trainTime').textContent = '训练中...';
+            
+            // 准备训练参数
+            const params = {
+                max_depth: maxDepth,
+                min_samples_split: minSamplesSplit,
+                min_samples_leaf: minSamplesLeaf,
+                criterion: criterion
+            };
+            
+            // 调用Python后端训练决策树
+            const result = await trainDecisionTree(params);
+            
+            if (result && result.success) {
+                // 更新显示
+                document.getElementById('trainAccuracy').textContent = result.train_accuracy.toFixed(3);
+                document.getElementById('testAccuracy').textContent = result.test_accuracy.toFixed(3);
+                document.getElementById('treeDepth').textContent = result.tree_depth;
+                document.getElementById('leafNodes').textContent = result.leaf_count;
+                document.getElementById('trainTime').textContent = result.train_time.toFixed(1) + 'ms';
+                
+                // 检查过拟合和欠拟合
+                const overfittingWarning = document.getElementById('overfittingWarning');
+                const underfittingWarning = document.getElementById('underfittingWarning');
+                
+                if (result.train_accuracy - result.test_accuracy > 0.1) {
+                    overfittingWarning.style.display = 'block';
+                } else {
+                    overfittingWarning.style.display = 'none';
+                }
+                
+                if (result.train_accuracy < 0.8 && result.test_accuracy < 0.8) {
+                    underfittingWarning.style.display = 'block';
+                } else {
+                    underfittingWarning.style.display = 'none';
+                }
+                
+                // 显示决策树结构
+                document.getElementById('treeStructure').textContent = result.tree_structure;
+                
+            } else {
+                console.error('训练失败:', result ? result.error : '未知错误');
+                // 显示错误信息
+                document.getElementById('trainAccuracy').textContent = '错误';
+                document.getElementById('testAccuracy').textContent = '错误';
+                document.getElementById('treeDepth').textContent = '错误';
+                document.getElementById('leafNodes').textContent = '错误';
+                document.getElementById('trainTime').textContent = '错误';
+                document.getElementById('treeStructure').textContent = '训练失败: ' + (result ? result.error : '无法连接到服务器');
+            }
+        }
+        
+        // 页面加载完成后自动训练一次
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDecisionTree();
+        });
+    </script>
+</body>
+</html>
