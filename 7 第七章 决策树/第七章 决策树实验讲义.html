@@ -557,8 +557,24 @@
                     <h5><i class="fas fa-database"></i> 使用数据集：西瓜数据集 (Watermelon Dataset)</h5>
                     <p><strong>数据特征：</strong>色泽、根蒂、敲声、纹理、脐部、触感、密度、含糖率（8个特征）</p>
                     <p><strong>分类目标：</strong>好瓜、坏瓜（2个类别）</p>
-                    <p><strong>样本数量：</strong>17个样本，好瓜8个，坏瓜9个，训练集12个，测试集5个</p>
-
+                    <p><strong>样本数量：</strong>17个样本，好瓜8个，坏瓜9个</p>
+                    
+                    <!-- 数据集预览表格 -->
+                    <div class="mt-3">
+                        <h6>数据集预览（前5行）：</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>编号</th><th>色泽</th><th>根蒂</th><th>敲声</th><th>纹理</th><th>脐部</th><th>触感</th><th>密度</th><th>含糖率</th><th>好瓜</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataset-preview">
+                                    <!-- 数据将通过JavaScript填充 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="row">
@@ -569,7 +585,7 @@
                         <div class="card mb-2">
                             <div class="card-body">
                                 <h6 class="card-title">📊 分裂标准 (criterion)</h6>
-                                <select id="criterion" class="form-select mb-2" onchange="updateDecisionTree()">
+                                <select id="criterion" class="form-select mb-2">
                                     <option value="gini">基尼系数 (Gini)</option>
                                     <option value="entropy">信息熵 (Entropy)</option>
                                 </select>
@@ -582,8 +598,8 @@
                         
                         <div class="card mb-2">
                             <div class="card-body">
-                                <h6 class="card-title">🌳 最大深度 (max_depth): <span id="maxDepthValue" class="text-primary">3</span></h6>
-                                <input type="range" id="maxDepth" class="form-range mb-2" min="1" max="8" value="3" onchange="updateDecisionTree()">
+                                <h6 class="card-title">🌳 最大深度 (max_depth): <span id="max-depth-value" class="text-primary">3</span></h6>
+                                <input type="range" id="max-depth" class="form-range mb-2" min="1" max="8" value="3" oninput="document.getElementById('max-depth-value').textContent = this.value">
                                 <small class="text-muted">
                                     控制树的最大层数。<strong>过小</strong>可能欠拟合，<strong>过大</strong>可能过拟合。
                                     推荐值：3-5层
@@ -593,8 +609,8 @@
                         
                         <div class="card mb-2">
                             <div class="card-body">
-                                <h6 class="card-title">🔀 最小分裂样本数 (min_samples_split): <span id="minSamplesSplitValue" class="text-primary">2</span></h6>
-                                <input type="range" id="minSamplesSplit" class="form-range mb-2" min="2" max="20" value="2" onchange="updateDecisionTree()">
+                                <h6 class="card-title">🔀 最小分裂样本数 (min_samples_split): <span id="min-samples-split-value" class="text-primary">2</span></h6>
+                                <input type="range" id="min-samples-split" class="form-range mb-2" min="2" max="10" value="2" oninput="document.getElementById('min-samples-split-value').textContent = this.value">
                                 <small class="text-muted">
                                     节点分裂所需的最小样本数。<strong>增大</strong>可防止过拟合，但可能导致欠拟合。
                                 </small>
@@ -603,97 +619,95 @@
                         
                         <div class="card mb-2">
                             <div class="card-body">
-                                <h6 class="card-title">🍃 最小叶节点样本数 (min_samples_leaf): <span id="minSamplesLeafValue" class="text-primary">1</span></h6>
-                                <input type="range" id="minSamplesLeaf" class="form-range mb-2" min="1" max="15" value="1" onchange="updateDecisionTree()">
+                                <h6 class="card-title">🍃 最小叶节点样本数 (min_samples_leaf): <span id="min-samples-leaf-value" class="text-primary">1</span></h6>
+                                <input type="range" id="min-samples-leaf" class="form-range mb-2" min="1" max="5" value="1" oninput="document.getElementById('min-samples-leaf-value').textContent = this.value">
                                 <small class="text-muted">
                                     叶节点必须包含的最小样本数。<strong>增大</strong>可使模型更平滑，减少过拟合。
                                 </small>
                             </div>
                         </div>
                         
-                        <button class="btn btn-primary btn-lg w-100" onclick="updateDecisionTree()">
+                        <button class="btn btn-primary btn-lg w-100" onclick="trainDecisionTree()">
                             <i class="fas fa-sync-alt"></i> 重新训练决策树
                         </button>
+                        
+                        <!-- 加载状态 -->
+                        <div id="loading" class="text-center mt-3" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">训练中...</span>
+                            </div>
+                            <p class="mt-2">正在训练决策树...</p>
+                        </div>
                     </div>
                     
                     <div class="col-lg-6">
                         <h4><i class="fas fa-chart-area"></i> 实时训练结果</h4>
                         
                         <!-- 性能指标展示 -->
-                        <div class="row mb-1">
+                        <div class="row mb-3">
                             <div class="col-6">
                                 <div class="metric-card bg-success text-white">
-                                    <div class="metric-value" id="trainAccuracy">0.950</div>
-                                    <div class="metric-label">训练准确率</div>
+                                    <div class="metric-value" id="accuracy">--</div>
+                                    <div class="metric-label">准确率</div>
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="metric-card bg-primary text-white">
-                                    <div class="metric-value" id="testAccuracy">0.933</div>
-                                    <div class="metric-label">测试准确率</div>
+                                <div class="metric-card bg-info text-white">
+                                    <div class="metric-value" id="tree-depth">--</div>
+                                    <div class="metric-label">树深度</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="row mb-1">
-                            <div class="col-4">
-                                <div class="metric-card bg-info text-white">
-                                    <div class="metric-value" id="treeDepth">3</div>
-                                    <div class="metric-label">实际深度</div>
-                                </div>
-                            </div>
-                            <div class="col-4">
+                        <div class="row mb-3">
+                            <div class="col-6">
                                 <div class="metric-card bg-warning text-white">
-                                    <div class="metric-value" id="leafNodes">5</div>
+                                    <div class="metric-value" id="leaf-nodes">--</div>
                                     <div class="metric-label">叶节点数</div>
                                 </div>
                             </div>
-                            <div class="col-4">
+                            <div class="col-6">
                                 <div class="metric-card bg-secondary text-white">
-                                    <div class="metric-value" id="trainTime">2.1ms</div>
+                                    <div class="metric-value" id="training-time">--</div>
                                     <div class="metric-label">训练时间</div>
                                 </div>
                             </div>
                         </div>
                         
-
-                        
-
-                        
                         <!-- 决策树结构 -->
-                        <div class="card mb-1">
+                        <div class="card mb-3">
                             <div class="card-header py-2">
                                 <h6 class="mb-0"><i class="fas fa-sitemap"></i> 决策树结构</h6>
                             </div>
                             <div class="card-body py-2">
-                                <div id="treeStructure" style="max-height: 200px; overflow-y: auto; font-family: monospace;">
-                                    <p style="color: #666;">请点击"重新训练决策树"按钮生成树结构</p>
+                                <div id="tree-structure" style="max-height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.4; white-space: pre-wrap; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                                    请点击"重新训练决策树"按钮生成树结构
                                 </div>
                                 <div class="mt-2 p-2 bg-light rounded">
                                     <small class="text-muted">
                                         <strong>结构说明：</strong><br>
                                         🌿 内部节点显示分裂条件（特征 ≤ 阈值）<br>
-                                        🍃 叶节点显示预测类别和样本分布
+                                        🍃 叶节点显示预测类别和样本数量
                                     </small>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- 过拟合警告 -->
-                        <div id="overfittingWarning" class="alert alert-warning mt-1 py-2" style="display: none;">
+                        <!-- 过拟合/欠拟合警告 -->
+                        <div id="overfitting-warning" class="alert alert-warning mt-2 py-2" style="display: none;">
                             <i class="fas fa-exclamation-triangle"></i>
-                            <strong>过拟合警告：</strong>训练准确率明显高于测试准确率，建议增大min_samples_split或min_samples_leaf参数。
+                            <strong>过拟合警告：</strong>准确率过高且树过深，建议增大min_samples_split或min_samples_leaf参数。
                         </div>
                         
-                        <div id="underfittingWarning" class="alert alert-info mt-1 py-2" style="display: none;">
+                        <div id="underfitting-warning" class="alert alert-info mt-2 py-2" style="display: none;">
                             <i class="fas fa-info-circle"></i>
-                            <strong>欠拟合提示：</strong>准确率较低，可以尝试增加max_depth或减小min_samples参数。
+                            <strong>欠拟合提示：</strong>准确率较低且树过浅，可以尝试增加max_depth或减小min_samples参数。
                         </div>
                     </div>
                 </div>
                 
                 <!-- 详细解释说明 -->
-                <div class="row mt-2">
+                <div class="row mt-4">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
@@ -705,17 +719,17 @@
                                         <h6 class="text-success">🎯 最佳实践建议</h6>
                                         <ul class="list-unstyled">
                                             <li><i class="fas fa-check text-success"></i> <strong>max_depth=3-5：</strong>适合大多数数据集</li>
-                                            <li><i class="fas fa-check text-success"></i> <strong>min_samples_split=5-10：</strong>防止过拟合</li>
-                                            <li><i class="fas fa-check text-success"></i> <strong>min_samples_leaf=2-5：</strong>保证叶节点稳定性</li>
+                                            <li><i class="fas fa-check text-success"></i> <strong>min_samples_split=2-5：</strong>防止过拟合</li>
+                                            <li><i class="fas fa-check text-success"></i> <strong>min_samples_leaf=1-3：</strong>保证叶节点稳定性</li>
                                             <li><i class="fas fa-check text-success"></i> <strong>gini vs entropy：</strong>gini计算更快，entropy更精确</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
                                         <h6 class="text-danger">⚠️ 常见问题</h6>
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-times text-danger"></i> <strong>过拟合：</strong>训练准确率>>测试准确率</li>
-                                            <li><i class="fas fa-times text-danger"></i> <strong>欠拟合：</strong>训练和测试准确率都很低</li>
-                                            <li><i class="fas fa-times text-danger"></i> <strong>过深树：</strong>叶节点过多，泛化能力差</li>
+                                            <li><i class="fas fa-times text-danger"></i> <strong>过拟合：</strong>准确率过高但泛化能力差</li>
+                                            <li><i class="fas fa-times text-danger"></i> <strong>欠拟合：</strong>准确率过低无法捕获规律</li>
+                                            <li><i class="fas fa-times text-danger"></i> <strong>过深树：</strong>叶节点过多，容易记忆训练数据</li>
                                             <li><i class="fas fa-times text-danger"></i> <strong>过浅树：</strong>无法捕获数据复杂性</li>
                                         </ul>
                                     </div>
@@ -888,892 +902,456 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
     
     <script>
-        // Flask服务器状态
-        let serverStarted = false;
-        let serverStarting = false;
+        // 西瓜数据集
+        const watermelonDataset = [
+            ['青绿', '蜷缩', '浊响', '清晰', '凹陷', '硬滑', 0.697, 0.460, '是'],
+            ['乌黑', '蜷缩', '沉闷', '清晰', '凹陷', '硬滑', 0.774, 0.376, '是'],
+            ['乌黑', '蜷缩', '浊响', '清晰', '凹陷', '硬滑', 0.634, 0.264, '是'],
+            ['青绿', '蜷缩', '沉闷', '清晰', '凹陷', '硬滑', 0.608, 0.318, '是'],
+            ['浅白', '蜷缩', '浊响', '清晰', '凹陷', '硬滑', 0.556, 0.215, '是'],
+            ['青绿', '稍蜷', '浊响', '清晰', '稍凹', '软粘', 0.403, 0.237, '是'],
+            ['乌黑', '稍蜷', '浊响', '稍糊', '稍凹', '软粘', 0.481, 0.149, '是'],
+            ['乌黑', '稍蜷', '浊响', '清晰', '稍凹', '硬滑', 0.437, 0.211, '是'],
+            ['乌黑', '稍蜷', '沉闷', '稍糊', '稍凹', '硬滑', 0.666, 0.091, '否'],
+            ['青绿', '硬挺', '清脆', '清晰', '平坦', '软粘', 0.243, 0.267, '否'],
+            ['浅白', '硬挺', '清脆', '模糊', '平坦', '硬滑', 0.245, 0.057, '否'],
+            ['浅白', '蜷缩', '浊响', '模糊', '平坦', '软粘', 0.343, 0.099, '否'],
+            ['青绿', '稍蜷', '浊响', '稍糊', '凹陷', '硬滑', 0.639, 0.161, '否'],
+            ['浅白', '稍蜷', '沉闷', '稍糊', '凹陷', '硬滑', 0.657, 0.198, '否'],
+            ['乌黑', '稍蜷', '浊响', '清晰', '稍凹', '软粘', 0.360, 0.370, '否'],
+            ['浅白', '蜷缩', '浊响', '模糊', '平坦', '硬滑', 0.593, 0.042, '否'],
+            ['青绿', '蜷缩', '沉闷', '稍糊', '稍凹', '硬滑', 0.719, 0.103, '否']
+        ];
         
-        // 自动启动Flask服务器
-        async function startFlaskServer() {
-            if (serverStarting || serverStarted) return;
-            
-            serverStarting = true;
-            console.log('正在检查Flask服务器状态...');
-            
-            // 显示启动状态
-            const statusDiv = document.createElement('div');
-            statusDiv.id = 'serverStatus';
-            statusDiv.className = 'alert alert-info';
-            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在检查Flask服务器状态...';
-            document.querySelector('.interactive-section').insertBefore(statusDiv, document.querySelector('.interactive-section').firstChild);
-            
-            // 首先检查服务器是否已经运行
-            try {
-                const testResponse = await fetch('http://127.0.0.1:5000/get_dataset_info');
-                if (testResponse.ok) {
-                    serverStarted = true;
-                    statusDiv.className = 'alert alert-success';
-                    statusDiv.innerHTML = '<i class="fas fa-check"></i> Flask服务器已在运行！';
-                    
-                    setTimeout(() => {
-                        statusDiv.style.display = 'none';
-                    }, 3000);
-                    
-                    await loadDatasetInfo();
-                    serverStarting = false;
-                    return;
-                }
-            } catch (error) {
-                console.log('服务器未运行，尝试自动启动...');
+        const featureNames = ['色泽', '根蒂', '敲声', '纹理', '脐部', '触感', '密度', '含糖率'];
+        
+        // 决策树节点类
+        class DecisionTreeNode {
+            constructor() {
+                this.feature = null;
+                this.threshold = null;
+                this.left = null;
+                this.right = null;
+                this.prediction = null;
+                this.samples = 0;
+                this.gini = 0;
             }
-            
-            // 如果服务器未运行，显示启动指引
-             statusDiv.className = 'alert alert-warning';
-             statusDiv.innerHTML = `
-                 <div class="d-flex align-items-center justify-content-between">
-                     <div>
-                         <i class="fas fa-exclamation-triangle"></i> 
-                         <strong>Flask服务器未启动</strong><br>
-                         <small>需要启动服务器才能使用交互式功能</small>
-                     </div>
-                     <div>
-                         <button class="btn btn-success btn-sm me-2" onclick="startServerAutomatically()">自动启动服务器</button>
-                         <button class="btn btn-outline-success btn-sm" onclick="downloadStartScript()">下载启动脚本</button>
-                     </div>
-                 </div>
-                 <div class="mt-3">
-                     <div class="row">
-                         <div class="col-md-6">
-                             <div class="p-2 bg-light rounded">
-                                 <h6 class="text-success mb-2"><i class="fas fa-magic"></i> 自动启动（推荐）</h6>
-                                 <small class="text-muted">
-                                     点击"自动启动服务器"按钮，系统将：<br>
-                                     1. 自动运行 <code>start_server.bat</code><br>
-                                     2. 在新窗口中启动Flask服务器<br>
-                                     3. 自动检测服务器状态
-                                 </small>
-                             </div>
-                         </div>
-                         <div class="col-md-6">
-                             <div class="p-2 bg-light rounded">
-                                 <h6 class="text-info mb-2"><i class="fas fa-terminal"></i> 手动启动</h6>
-                                 <small class="text-muted">
-                                     1. 双击运行 <code>start_server.bat</code><br>
-                                     2. 或在命令行运行：<code>python watermelon_server.py</code><br>
-                                     3. 保持命令行窗口打开
-                                 </small>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
-                 <div class="mt-2 text-center">
-                     <button class="btn btn-primary btn-sm" onclick="retryServerConnection()">重新检查连接</button>
-                 </div>
-             `;
-            
-            serverStarting = false;
         }
         
-        // 自动启动服务器
-         async function startServerAutomatically() {
-             const statusDiv = document.getElementById('serverStatus');
-             statusDiv.className = 'alert alert-info';
-             statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在自动启动Flask服务器，请稍候...';
-             
-             try {
-                 // 方法1: 尝试使用Node.js脚本启动
-                 console.log('尝试使用Node.js自动启动服务器...');
-                 
-                 // 检查是否有Node.js环境
-                 const hasNodeJS = await checkNodeJSAvailable();
-                 
-                 if (hasNodeJS) {
-                     statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在通过Node.js启动服务器...';
-                     
-                     try {
-                         // 尝试执行Node.js启动脚本
-                         const result = await executeNodeScript();
-                         
-                         if (result.success) {
-                             statusDiv.className = 'alert alert-success';
-                             statusDiv.innerHTML = `
-                                 <i class="fas fa-check"></i> 
-                                 <strong>服务器启动成功!</strong><br>
-                                 正在验证连接状态...
-                             `;
-                             
-                             // 等待服务器完全启动
-                             setTimeout(async () => {
-                                 await retryServerConnection();
-                             }, 3000);
-                             return;
-                         }
-                     } catch (nodeError) {
-                         console.log('Node.js启动失败:', nodeError);
-                     }
-                 }
-                 
-                 // 方法2: 尝试运行批处理文件
-                 console.log('尝试使用批处理文件启动服务器...');
-                 statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在通过批处理文件启动服务器...';
-                 
-                 if (navigator.platform.indexOf('Win') !== -1) {
-                     try {
-                         // 尝试多种方式执行批处理文件
-                         const batchResult = await executeBatchFile();
-                         
-                         if (batchResult.success) {
-                             statusDiv.innerHTML = `
-                                 <i class="fas fa-info-circle"></i> 
-                                 <strong>正在启动服务器...</strong><br>
-                                 批处理文件已执行，请等待服务器启动完成<br>
-                                 <div class="mt-2">
-                                     <button class="btn btn-primary btn-sm" onclick="retryServerConnection()">检查服务器状态</button>
-                                 </div>
-                             `;
-                             
-                             // 定期检查服务器状态
-                             setTimeout(async () => {
-                                 await retryServerConnection();
-                             }, 5000);
-                             return;
-                         }
-                     } catch (batchError) {
-                         console.log('批处理文件执行失败:', batchError);
-                     }
-                 }
-                 
-                 // 方法3: 提供手动启动选项
-                 console.log('自动启动失败，提供手动启动选项');
-                 statusDiv.className = 'alert alert-warning';
-                 statusDiv.innerHTML = `
-                     <i class="fas fa-exclamation-triangle"></i> 
-                     <strong>自动启动失败</strong><br>
-                     请选择以下方式手动启动服务器：<br>
-                     <div class="mt-2">
-                         <button class="btn btn-success btn-sm me-2" onclick="openBatchFile()">运行批处理文件</button>
-                         <button class="btn btn-info btn-sm me-2" onclick="downloadStartScript()">下载启动脚本</button>
-                         <button class="btn btn-primary btn-sm" onclick="retryServerConnection()">重新检查</button>
-                     </div>
-                     <div class="mt-2">
-                         <small class="text-muted">
-                             <strong>手动启动方法：</strong><br>
-                             1. 双击运行 <code>start_server.bat</code><br>
-                             2. 或在命令行运行：<code>python watermelon_server.py</code><br>
-                             3. 或运行：<code>node auto_start_server.js</code>
-                         </small>
-                     </div>
-                 `;
-                 
-             } catch (error) {
-                 console.error('启动过程发生错误:', error);
-                 statusDiv.className = 'alert alert-danger';
-                 statusDiv.innerHTML = `
-                     <i class="fas fa-times"></i> 
-                     <strong>启动失败</strong><br>
-                     错误信息: ${error.message}<br>
-                     <div class="mt-2">
-                         <button class="btn btn-primary btn-sm me-2" onclick="retryServerConnection()">重试连接</button>
-                         <button class="btn btn-info btn-sm" onclick="downloadStartScript()">下载启动脚本</button>
-                     </div>
-                 `;
-             }
-         }
-         
-         // 检查Node.js是否可用
-         async function checkNodeJSAvailable() {
-             try {
-                 // 尝试检查Node.js是否安装
-                 const response = await fetch('/check-nodejs', { method: 'POST' }).catch(() => null);
-                 return response && response.ok;
-             } catch (error) {
-                 return false;
-             }
-         }
-         
-         // 执行Node.js启动脚本
-         async function executeNodeScript() {
-             try {
-                 // 创建一个隐藏的iframe尝试执行Node.js脚本
-                 const iframe = document.createElement('iframe');
-                 iframe.style.display = 'none';
-                 iframe.src = 'data:text/html,<script>window.parent.postMessage({type:"node-start", success: true}, "*");<\/script>';
-                 document.body.appendChild(iframe);
-                 
-                 // 尝试通过文件协议执行
-                 const link = document.createElement('a');
-                 link.href = 'auto_start_server.js';
-                 link.click();
-                 
-                 setTimeout(() => {
-                     document.body.removeChild(iframe);
-                 }, 2000);
-                 
-                 return { success: true };
-             } catch (error) {
-                 return { success: false, error: error.message };
-             }
-         }
-         
-         // 执行批处理文件
-         async function executeBatchFile() {
-             try {
-                 // 方法1: 尝试通过iframe执行
-                 const iframe = document.createElement('iframe');
-                 iframe.style.display = 'none';
-                 iframe.src = 'start_server.bat';
-                 document.body.appendChild(iframe);
-                 
-                 setTimeout(() => {
-                     if (iframe.parentNode) {
-                         document.body.removeChild(iframe);
-                     }
-                 }, 2000);
-                 
-                 // 方法2: 尝试通过链接打开
-                 const link = document.createElement('a');
-                 link.href = 'start_server.bat';
-                 link.target = '_blank';
-                 link.click();
-                 
-                 return { success: true };
-             } catch (error) {
-                 return { success: false, error: error.message };
-             }
-         }
-         
-         // 打开批处理文件
-         function openBatchFile() {
-             try {
-                 const link = document.createElement('a');
-                 link.href = 'start_server.bat';
-                 link.target = '_blank';
-                 link.click();
-                 
-                 // 提示用户
-                 const statusDiv = document.getElementById('serverStatus');
-                 statusDiv.className = 'alert alert-info';
-                 statusDiv.innerHTML = `
-                     <i class="fas fa-info-circle"></i> 
-                     <strong>已尝试打开批处理文件</strong><br>
-                     如果没有自动运行，请手动双击 <code>start_server.bat</code> 文件<br>
-                     <div class="mt-2">
-                         <button class="btn btn-primary btn-sm" onclick="retryServerConnection()">检查服务器状态</button>
-                     </div>
-                 `;
-             } catch (error) {
-                 console.error('打开批处理文件失败:', error);
-             }
-         }
-         
-         // 下载启动脚本
-         function downloadStartScript() {
-             const statusDiv = document.getElementById('serverStatus');
-             
-             // 创建Python启动脚本
-             const pythonScript = `#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Flask服务器启动脚本
-自动启动决策树实验的Flask后端服务
-"""
-
-import os
-import sys
-import subprocess
-import time
-
-def start_server():
-    print("="*50)
-    print("决策树实验 - Flask服务器启动脚本")
-    print("="*50)
-    
-    # 获取脚本所在目录
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    server_file = os.path.join(script_dir, 'watermelon_server.py')
-    
-    print(f"当前目录: {script_dir}")
-    print(f"服务器文件: {server_file}")
-    
-    if not os.path.exists(server_file):
-        print(f"错误: 找不到服务器文件 {server_file}")
-        input("按回车键退出...")
-        return
-    
-    print("\n正在启动Flask服务器...")
-    print("提示: 保持此窗口打开，关闭窗口将停止服务器")
-    print("服务器地址: http://127.0.0.1:5000")
-    print("-"*50)
-    
-    try:
-        # 启动服务器
-        subprocess.run([sys.executable, server_file], cwd=script_dir)
-    except KeyboardInterrupt:
-        print("\n服务器已停止")
-    except Exception as e:
-        print(f"启动失败: {e}")
-        input("按回车键退出...")
-
-if __name__ == '__main__':
-    start_server()
-`;
-             
-             // 下载Python脚本
-             const blob = new Blob([pythonScript], { type: 'text/plain' });
-             const url = URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             a.href = url;
-             a.download = 'start_flask_server.py';
-             a.click();
-             URL.revokeObjectURL(url);
-             
-             statusDiv.className = 'alert alert-info';
-             statusDiv.innerHTML = `
-                 <i class="fas fa-download"></i> 
-                 <strong>启动脚本已下载</strong><br>
-                 请运行下载的 <code>start_flask_server.py</code> 文件来启动服务器<br>
-                 <div class="mt-2">
-                     <small class="text-muted">
-                         <strong>运行方法：</strong><br>
-                         • Windows: 双击运行 <code>start_flask_server.py</code><br>
-                         • 或在命令行运行: <code>python start_flask_server.py</code>
-                     </small>
-                 </div>
-                 <button class="btn btn-primary btn-sm mt-2" onclick="retryServerConnection()">启动后点击重试</button>
-             `;
-         }
-         
-         // 一键启动服务器（保留原有功能）
-         async function startServerManually() {
-            const statusDiv = document.getElementById('serverStatus');
-            statusDiv.className = 'alert alert-info';
-            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在尝试启动Flask服务器...';
+        // 决策树分类器
+        class DecisionTreeClassifier {
+            constructor(criterion = 'gini', maxDepth = 3, minSamplesSplit = 2, minSamplesLeaf = 1) {
+                this.criterion = criterion;
+                this.maxDepth = maxDepth;
+                this.minSamplesSplit = minSamplesSplit;
+                this.minSamplesLeaf = minSamplesLeaf;
+                this.root = null;
+            }
             
-            try {
-                // 尝试通过不同方式启动服务器
-                const methods = [
-                    () => fetch('http://127.0.0.1:5000/start', { method: 'POST' }),
-                    () => fetch('/start_server', { method: 'POST' }),
-                    () => {
-                        // 尝试使用window.open打开Python脚本
-                        const pythonScript = `
-                            import subprocess
-                            import sys
-                            import os
-                            
-                            # 切换到脚本目录
-                            os.chdir(r'j:\\实验讲义\\myenv\\7 第七章 决策树')
-                            
-                            # 启动Flask服务器
-                            subprocess.Popen([sys.executable, 'watermelon_server.py'])
-                        `;
-                        
-                        const blob = new Blob([pythonScript], { type: 'text/plain' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'start_server.py';
-                        a.click();
-                        URL.revokeObjectURL(url);
-                        
-                        return Promise.resolve({ ok: false });
-                    }
-                ];
+            // 计算基尼不纯度
+            giniImpurity(y) {
+                const counts = {};
+                for (const label of y) {
+                    counts[label] = (counts[label] || 0) + 1;
+                }
                 
-                for (const method of methods) {
-                    try {
-                        const response = await method();
-                        if (response.ok) {
-                            statusDiv.className = 'alert alert-success';
-                            statusDiv.innerHTML = '<i class="fas fa-check"></i> 服务器启动成功！正在连接...';
-                            
-                            // 等待服务器完全启动
-                            setTimeout(async () => {
-                                await retryServerConnection();
-                            }, 3000);
-                            return;
+                let gini = 1.0;
+                const total = y.length;
+                for (const count of Object.values(counts)) {
+                    const prob = count / total;
+                    gini -= prob * prob;
+                }
+                return gini;
+            }
+            
+            // 计算信息熵
+            entropy(y) {
+                const counts = {};
+                for (const label of y) {
+                    counts[label] = (counts[label] || 0) + 1;
+                }
+                
+                let entropy = 0.0;
+                const total = y.length;
+                for (const count of Object.values(counts)) {
+                    if (count > 0) {
+                        const prob = count / total;
+                        entropy -= prob * Math.log2(prob);
+                    }
+                }
+                return entropy;
+            }
+            
+            // 计算不纯度
+            impurity(y) {
+                if (this.criterion === 'gini') {
+                    return this.giniImpurity(y);
+                } else {
+                    return this.entropy(y);
+                }
+            }
+            
+            // 获取最常见的类别
+            mostCommonClass(y) {
+                const counts = {};
+                for (const label of y) {
+                    counts[label] = (counts[label] || 0) + 1;
+                }
+                return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+            }
+            
+            // 分裂数据
+            splitData(X, y, feature, threshold) {
+                const leftX = [], leftY = [], rightX = [], rightY = [];
+                
+                for (let i = 0; i < X.length; i++) {
+                    if (typeof X[i][feature] === 'number') {
+                        if (X[i][feature] <= threshold) {
+                            leftX.push(X[i]);
+                            leftY.push(y[i]);
+                        } else {
+                            rightX.push(X[i]);
+                            rightY.push(y[i]);
                         }
-                    } catch (e) {
-                        console.log('启动方法失败:', e);
+                    } else {
+                        if (X[i][feature] === threshold) {
+                            leftX.push(X[i]);
+                            leftY.push(y[i]);
+                        } else {
+                            rightX.push(X[i]);
+                            rightY.push(y[i]);
+                        }
                     }
                 }
                 
-                // 所有方法都失败，提供下载启动脚本
-                statusDiv.className = 'alert alert-info';
-                statusDiv.innerHTML = `
-                    <i class="fas fa-download"></i> 
-                    <strong>已生成启动脚本</strong><br>
-                    请运行下载的 <code>start_server.py</code> 文件来启动服务器<br>
-                    <button class="btn btn-primary btn-sm mt-2" onclick="retryServerConnection()">启动后点击重试</button>
-                `;
+                return { leftX, leftY, rightX, rightY };
+            }
+            
+            // 寻找最佳分裂
+            findBestSplit(X, y) {
+                let bestGain = -1;
+                let bestFeature = null;
+                let bestThreshold = null;
                 
-            } catch (error) {
-                statusDiv.className = 'alert alert-danger';
-                statusDiv.innerHTML = `
-                    <i class="fas fa-times"></i> 
-                    <strong>自动启动失败</strong><br>
-                    请手动运行：<code>python watermelon_server.py</code><br>
-                    <button class="btn btn-primary btn-sm mt-2" onclick="retryServerConnection()">重试连接</button>
-                `;
-            }
-        }
-        
-        // 重试连接服务器
-        async function retryServerConnection() {
-            serverStarted = false;
-            serverStarting = false;
-            await startFlaskServer();
-        }
-        
-        // 页面加载时自动启动服务器
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('页面加载完成，开始自动启动Flask服务器...');
-            
-            // 延迟1秒后开始自动启动流程
-            setTimeout(async () => {
-                await autoStartServerOnLoad();
-            }, 1000);
-            
-            // 如果用户点击了交互式功能但服务器未启动，自动提示启动
-            const interactiveButtons = document.querySelectorAll('button[onclick*="updateDecisionTree"]');
-            interactiveButtons.forEach(button => {
-                const originalOnclick = button.onclick;
-                button.onclick = function() {
-                    if (!serverStarted) {
-                        alert('请先启动Flask服务器才能使用交互式功能！');
-                        document.getElementById('serverStatus').scrollIntoView({ behavior: 'smooth' });
-                        return false;
+                const currentImpurity = this.impurity(y);
+                
+                for (let feature = 0; feature < X[0].length; feature++) {
+                    const values = [...new Set(X.map(row => row[feature]))];
+                    
+                    for (const threshold of values) {
+                        const { leftY, rightY } = this.splitData(X, y, feature, threshold);
+                        
+                        if (leftY.length < this.minSamplesLeaf || rightY.length < this.minSamplesLeaf) {
+                            continue;
+                        }
+                        
+                        const leftWeight = leftY.length / y.length;
+                        const rightWeight = rightY.length / y.length;
+                        const weightedImpurity = leftWeight * this.impurity(leftY) + rightWeight * this.impurity(rightY);
+                        const gain = currentImpurity - weightedImpurity;
+                        
+                        if (gain > bestGain) {
+                            bestGain = gain;
+                            bestFeature = feature;
+                            bestThreshold = threshold;
+                        }
                     }
-                    if (originalOnclick) {
-                        return originalOnclick.call(this);
+                }
+                
+                return { bestFeature, bestThreshold, bestGain };
+            }
+            
+            // 构建决策树
+            buildTree(X, y, depth = 0) {
+                const node = new DecisionTreeNode();
+                node.samples = y.length;
+                node.gini = this.giniImpurity(y);
+                
+                // 停止条件
+                if (depth >= this.maxDepth || 
+                    y.length < this.minSamplesSplit || 
+                    this.impurity(y) === 0 ||
+                    [...new Set(y)].length === 1) {
+                    node.prediction = this.mostCommonClass(y);
+                    return node;
+                }
+                
+                const { bestFeature, bestThreshold, bestGain } = this.findBestSplit(X, y);
+                
+                if (bestGain <= 0) {
+                    node.prediction = this.mostCommonClass(y);
+                    return node;
+                }
+                
+                node.feature = bestFeature;
+                node.threshold = bestThreshold;
+                
+                const { leftX, leftY, rightX, rightY } = this.splitData(X, y, bestFeature, bestThreshold);
+                
+                node.left = this.buildTree(leftX, leftY, depth + 1);
+                node.right = this.buildTree(rightX, rightY, depth + 1);
+                
+                return node;
+            }
+            
+            // 训练模型
+            fit(X, y) {
+                this.root = this.buildTree(X, y);
+            }
+            
+            // 预测单个样本
+            predictSample(x, node = null) {
+                if (node === null) node = this.root;
+                
+                if (node.prediction !== null) {
+                    return node.prediction;
+                }
+                
+                if (typeof x[node.feature] === 'number') {
+                    if (x[node.feature] <= node.threshold) {
+                        return this.predictSample(x, node.left);
+                    } else {
+                        return this.predictSample(x, node.right);
                     }
-                };
-            });
-        });
-          
-        // 页面加载时的自动启动流程
-        async function autoStartServerOnLoad() {
-              try {
-                  console.log('开始自动启动流程...');
-                  
-                  // 首先检查服务器是否已经运行
-                  const isRunning = await checkServerRunning();
-                  
-                  if (isRunning) {
-                      console.log('服务器已在运行，无需启动');
-                      serverStarted = true;
-                      
-                      // 显示成功状态
-                      const statusDiv = document.createElement('div');
-                      statusDiv.id = 'serverStatus';
-                      statusDiv.className = 'alert alert-success';
-                      statusDiv.innerHTML = '<i class="fas fa-check"></i> Flask服务器已连接，可以正常使用交互功能！';
-                      document.querySelector('.interactive-section').insertBefore(statusDiv, document.querySelector('.interactive-section').firstChild);
-                      
-                      // 3秒后隐藏状态提示
-                      setTimeout(() => {
-                          if (statusDiv.parentNode) {
-                              statusDiv.style.display = 'none';
-                          }
-                      }, 3000);
-                      
-                      await loadDatasetInfo();
-                      return;
-                  }
-                  
-                  console.log('服务器未运行，开始自动启动...');
-                  
-                  // 创建状态显示区域
-                  const statusDiv = document.createElement('div');
-                  statusDiv.id = 'serverStatus';
-                  statusDiv.className = 'alert alert-info';
-                  statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在自动启动Flask服务器，请稍候...';
-                  document.querySelector('.interactive-section').insertBefore(statusDiv, document.querySelector('.interactive-section').firstChild);
-                  
-                  // 尝试自动启动
-                  await attemptAutoStart(statusDiv);
-                  
-              } catch (error) {
-                  console.error('自动启动流程出错:', error);
-                  
-                  // 显示错误状态
-                  let statusDiv = document.getElementById('serverStatus');
-                  if (!statusDiv) {
-                      statusDiv = document.createElement('div');
-                      statusDiv.id = 'serverStatus';
-                      document.querySelector('.interactive-section').insertBefore(statusDiv, document.querySelector('.interactive-section').firstChild);
-                  }
-                  
-                  statusDiv.className = 'alert alert-warning';
-                  statusDiv.innerHTML = `
-                      <i class="fas fa-exclamation-triangle"></i> 
-                      <strong>自动启动失败</strong><br>
-                      请手动启动Flask服务器以使用交互功能<br>
-                      <div class="mt-2">
-                          <button class="btn btn-success btn-sm me-2" onclick="startServerAutomatically()">重试自动启动</button>
-                          <button class="btn btn-info btn-sm" onclick="downloadStartScript()">下载启动脚本</button>
-                      </div>
-                  `;
-              }
-          }
-          
-        // 检查服务器是否运行
-        async function checkServerRunning() {
-              try {
-                  const response = await fetch('http://127.0.0.1:5000/get_dataset_info', {
-                      method: 'GET',
-                      timeout: 3000
-                  });
-                  return response.ok;
-              } catch (error) {
-                  return false;
-              }
-          }
-          
-        // 尝试自动启动
-        async function attemptAutoStart(statusDiv) {
-              try {
-                  // 方法1: 尝试Node.js启动
-                  statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 尝试通过Node.js自动启动服务器...';
-                  
-                  const nodeResult = await tryNodeJSStart();
-                  if (nodeResult.success) {
-                      statusDiv.className = 'alert alert-success';
-                      statusDiv.innerHTML = '<i class="fas fa-check"></i> 服务器启动成功！正在验证连接...';
-                      
-                      // 等待并验证连接
-                      const connected = await waitForServerConnection(10);
-                      if (connected) {
-                          serverStarted = true;
-                          statusDiv.innerHTML = '<i class="fas fa-check"></i> Flask服务器连接成功，可以正常使用交互功能！';
-                          setTimeout(() => {
-                              statusDiv.style.display = 'none';
-                          }, 3000);
-                          await loadDatasetInfo();
-                          return;
-                      }
-                  }
-                  
-                  // 方法2: 尝试批处理文件启动
-                  statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 尝试通过批处理文件启动服务器...';
-                  
-                  const batchResult = await tryBatchStart();
-                  if (batchResult.success) {
-                      statusDiv.innerHTML = '<i class="fas fa-info-circle"></i> 批处理文件已执行，正在等待服务器启动...';
-                      
-                      // 等待服务器启动
-                      const connected = await waitForServerConnection(15);
-                      if (connected) {
-                          serverStarted = true;
-                          statusDiv.className = 'alert alert-success';
-                          statusDiv.innerHTML = '<i class="fas fa-check"></i> Flask服务器连接成功，可以正常使用交互功能！';
-                          setTimeout(() => {
-                              statusDiv.style.display = 'none';
-                          }, 3000);
-                          await loadDatasetInfo();
-                          return;
-                      }
-                  }
-                  
-                  // 所有自动启动方法都失败
-                  statusDiv.className = 'alert alert-warning';
-                  statusDiv.innerHTML = `
-                      <div class="d-flex align-items-center justify-content-between">
-                          <div>
-                              <i class="fas fa-exclamation-triangle"></i> 
-                              <strong>Flask服务器未启动</strong><br>
-                              <small>需要启动服务器才能使用交互式功能</small>
-                          </div>
-                          <div>
-                              <button class="btn btn-success btn-sm me-2" onclick="startServerAutomatically()">自动启动服务器</button>
-                              <button class="btn btn-outline-success btn-sm" onclick="downloadStartScript()">下载启动脚本</button>
-                          </div>
-                      </div>
-                      <div class="mt-3">
-                          <div class="row">
-                              <div class="col-md-6">
-                                  <div class="p-2 bg-light rounded">
-                                      <h6 class="text-success mb-2"><i class="fas fa-magic"></i> 自动启动（推荐）</h6>
-                                      <small class="text-muted">
-                                          点击"自动启动服务器"按钮，系统将：<br>
-                                          1. 自动运行 <code>start_server.bat</code><br>
-                                          2. 在新窗口中启动Flask服务器<br>
-                                          3. 自动检测服务器状态
-                                      </small>
-                                  </div>
-                              </div>
-                              <div class="col-md-6">
-                                  <div class="p-2 bg-light rounded">
-                                      <h6 class="text-info mb-2"><i class="fas fa-terminal"></i> 手动启动</h6>
-                                      <small class="text-muted">
-                                          1. 双击运行 <code>start_server.bat</code><br>
-                                          2. 或在命令行运行：<code>python watermelon_server.py</code><br>
-                                          3. 或运行：<code>node auto_start_server.js</code><br>
-                                          4. 保持命令行窗口打开
-                                      </small>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                      <div class="mt-2 text-center">
-                          <button class="btn btn-primary btn-sm" onclick="retryServerConnection()">重新检查连接</button>
-                      </div>
-                  `;
-                  
-              } catch (error) {
-                  console.error('自动启动过程出错:', error);
-                  statusDiv.className = 'alert alert-danger';
-                  statusDiv.innerHTML = `
-                      <i class="fas fa-times"></i> 
-                      <strong>自动启动失败</strong><br>
-                      错误: ${error.message}<br>
-                      <button class="btn btn-primary btn-sm mt-2" onclick="startServerAutomatically()">重试启动</button>
-                  `;
-              }
-          }
-          
-        // 尝试Node.js启动
-        async function tryNodeJSStart() {
-              try {
-                  // 创建启动链接
-                  const link = document.createElement('a');
-                  link.href = 'auto_start_server.js';
-                  link.target = '_blank';
-                  link.click();
-                  
-                  return { success: true };
-              } catch (error) {
-                  console.log('Node.js启动失败:', error);
-                  return { success: false, error: error.message };
-              }
-          }
-          
-        // 尝试批处理启动
-        async function tryBatchStart() {
-              try {
-                  if (navigator.platform.indexOf('Win') !== -1) {
-                      const link = document.createElement('a');
-                      link.href = 'start_server.bat';
-                      link.target = '_blank';
-                      link.click();
-                      
-                      return { success: true };
-                  }
-                  return { success: false, error: '非Windows系统' };
-              } catch (error) {
-                  console.log('批处理启动失败:', error);
-                  return { success: false, error: error.message };
-              }
-          }
-          
-        // 等待服务器连接
-        async function waitForServerConnection(maxRetries = 10) {
-              for (let i = 0; i < maxRetries; i++) {
-                  console.log(`等待服务器连接 (${i + 1}/${maxRetries})...`);
-                  
-                  try {
-                      const response = await fetch('http://127.0.0.1:5000/get_dataset_info', {
-                          method: 'GET',
-                          timeout: 3000
-                      });
-                      
-                      if (response.ok) {
-                          console.log('服务器连接成功!');
-                          return true;
-                      }
-                  } catch (error) {
-                      console.log(`连接尝试 ${i + 1} 失败:`, error.message);
-                  }
-                  
-                  // 等待2秒后重试
-                  if (i < maxRetries - 1) {
-                      await new Promise(resolve => setTimeout(resolve, 2000));
-                  }
-              }
-              
-              console.log('服务器连接超时');
-              return false;
-          }
-         
-         // 添加自动重试机制
-         let retryCount = 0;
-         const maxRetries = 3;
-         
-         async function autoRetryConnection() {
-             if (serverStarted || retryCount >= maxRetries) return;
-             
-             retryCount++;
-             console.log(`自动重试连接服务器 (${retryCount}/${maxRetries})`);
-             
-             try {
-                 const response = await fetch('http://127.0.0.1:5000/get_dataset_info');
-                 if (response.ok) {
-                     serverStarted = true;
-                     const statusDiv = document.getElementById('serverStatus');
-                     if (statusDiv) {
-                         statusDiv.className = 'alert alert-success';
-                         statusDiv.innerHTML = '<i class="fas fa-check"></i> Flask服务器连接成功！';
-                         setTimeout(() => {
-                             statusDiv.style.display = 'none';
-                         }, 3000);
-                     }
-                     await loadDatasetInfo();
-                     return;
-                 }
-             } catch (error) {
-                 console.log(`重试 ${retryCount} 失败:`, error);
-             }
-             
-             // 如果还有重试次数，5秒后再试
-             if (retryCount < maxRetries) {
-                 setTimeout(autoRetryConnection, 5000);
-             }
-         }
-         
-        // 每30秒检查一次服务器状态（如果未连接）
-        setInterval(() => {
-            if (!serverStarted) {
-                autoRetryConnection();
+                } else {
+                    if (x[node.feature] === node.threshold) {
+                        return this.predictSample(x, node.left);
+                    } else {
+                        return this.predictSample(x, node.right);
+                    }
+                }
             }
-        }, 30000);
-        
-        // 参数控制
-        document.getElementById('maxDepth').addEventListener('input', function() {
-            document.getElementById('maxDepthValue').textContent = this.value;
-        });
-        
-        document.getElementById('minSamplesSplit').addEventListener('input', function() {
-            document.getElementById('minSamplesSplitValue').textContent = this.value;
-        });
-        
-        document.getElementById('minSamplesLeaf').addEventListener('input', function() {
-            document.getElementById('minSamplesLeafValue').textContent = this.value;
-        });
-
-        // 西瓜数据集信息
-        let watermelonData = {
-            features: [],
-            labels: [],
-            classNames: ['坏瓜', '好瓜'],
-            featureNames: []
-        };
-        
-        // 从Python后端获取数据集信息
-        async function loadDatasetInfo() {
-            try {
-                const response = await fetch('http://127.0.0.1:5000/get_dataset_info');
-                const data = await response.json();
-                watermelonData.features = data.features;
-                watermelonData.labels = data.target_classes;
-                watermelonData.featureNames = data.features;
-                console.log('西瓜数据集已加载:', data);
-            } catch (error) {
-                console.error('加载数据集失败:', error);
+            
+            // 预测多个样本
+            predict(X) {
+                return X.map(x => this.predictSample(x));
             }
-        }
-        
-        // 调用Python后端训练决策树
-        async function trainDecisionTree(params) {
-            try {
-                const response = await fetch('http://127.0.0.1:5000/train_tree', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(params)
-                });
-                const result = await response.json();
+            
+            // 计算准确率
+            score(X, y) {
+                const predictions = this.predict(X);
+                let correct = 0;
+                for (let i = 0; i < y.length; i++) {
+                    if (predictions[i] === y[i]) correct++;
+                }
+                return correct / y.length;
+            }
+            
+            // 获取树的深度
+            getDepth(node = null) {
+                if (node === null) node = this.root;
+                if (node.prediction !== null) return 1;
+                
+                const leftDepth = node.left ? this.getDepth(node.left) : 0;
+                const rightDepth = node.right ? this.getDepth(node.right) : 0;
+                return 1 + Math.max(leftDepth, rightDepth);
+            }
+            
+            // 获取叶节点数量
+            getLeafCount(node = null) {
+                if (node === null) node = this.root;
+                if (node.prediction !== null) return 1;
+                
+                const leftLeaves = node.left ? this.getLeafCount(node.left) : 0;
+                const rightLeaves = node.right ? this.getLeafCount(node.right) : 0;
+                return leftLeaves + rightLeaves;
+            }
+            
+            // 生成树结构文本
+            generateTreeText(node = null, depth = 0, prefix = '') {
+                if (!node) node = this.root;
+                if (!node) return '';
+                
+                let result = '';
+                const indent = '  '.repeat(depth);
+                
+                if (node.prediction !== null) {
+                    // 叶节点 - 显示预测结果
+                    const className = node.prediction === '是' ? '好瓜🍉' : '坏瓜🚫';
+                    const color = node.prediction === '是' ? 'color: #28a745; font-weight: bold;' : 'color: #dc3545; font-weight: bold;';
+                    result += `${prefix}<span style="${color}">${className}</span> <span style="color: #6c757d;">(样本数: ${node.samples})</span>\n`;
+                } else {
+                    // 决策节点 - 显示特征和条件
+                    const featureName = featureNames[node.feature];
+                    result += `${prefix}<span style="color: #007bff; font-weight: bold;">${featureName}?</span> <span style="color: #6c757d;">(样本数: ${node.samples})</span>\n`;
+                    
+                    if (node.left) {
+                        // 左分支条件
+                        const leftCondition = this.getLeftCondition(node.feature, node.threshold);
+                        result += `${prefix}├─ <span style="color: #17a2b8;">${leftCondition}</span>\n`;
+                        result += this.generateTreeText(node.left, depth + 1, prefix + '│  ');
+                    }
+                    
+                    if (node.right) {
+                        // 右分支条件
+                        const rightCondition = this.getRightCondition(node.feature, node.threshold);
+                        result += `${prefix}└─ <span style="color: #17a2b8;">${rightCondition}</span>\n`;
+                        result += this.generateTreeText(node.right, depth + 1, prefix + '   ');
+                    }
+                }
+                
                 return result;
-            } catch (error) {
-                console.error('训练决策树失败:', error);
-                return null;
+            }
+            
+            // 获取左分支条件
+            getLeftCondition(feature, threshold) {
+                const featureName = featureNames[feature];
+                if (typeof threshold === 'number') {
+                    return `${featureName} ≤ ${threshold.toFixed(3)}`;
+                } else {
+                    // 根据特征名称返回对应的条件
+                    const conditionMap = {
+                        '纹理': '清晰',
+                        '根蒂': '蜷缩', 
+                        '敲声': '浊响',
+                        '色泽': '青绿',
+                        '脐部': '凹陷',
+                        '触感': '硬滑'
+                    };
+                    return conditionMap[featureName] || '是';
+                }
+            }
+            
+            // 获取右分支条件
+            getRightCondition(feature, threshold) {
+                const featureName = featureNames[feature];
+                if (typeof threshold === 'number') {
+                    return `${featureName} > ${threshold.toFixed(3)}`;
+                } else {
+                    // 根据特征名称返回对应的条件
+                    const conditionMap = {
+                        '纹理': '稍糊/模糊',
+                        '根蒂': '稍蜷/硬挺',
+                        '敲声': '沉闷/清脆', 
+                        '色泽': '乌黑/浅白',
+                        '脐部': '稍凹/平坦',
+                        '触感': '软粘'
+                    };
+                    return conditionMap[featureName] || '否';
+                }
             }
         }
         
-        // 更新决策树
-        async function updateDecisionTree() {
-            // 更新参数显示
-            const maxDepth = parseInt(document.getElementById('maxDepth').value);
-            const minSamplesSplit = parseInt(document.getElementById('minSamplesSplit').value);
-            const minSamplesLeaf = parseInt(document.getElementById('minSamplesLeaf').value);
+        // 训练决策树
+        function trainDecisionTree() {
+            const startTime = performance.now();
+            
+            // 获取参数
             const criterion = document.getElementById('criterion').value;
+            const maxDepth = parseInt(document.getElementById('max-depth').value);
+            const minSamplesSplit = parseInt(document.getElementById('min-samples-split').value);
+            const minSamplesLeaf = parseInt(document.getElementById('min-samples-leaf').value);
             
-            document.getElementById('maxDepthValue').textContent = maxDepth;
-            document.getElementById('minSamplesSplitValue').textContent = minSamplesSplit;
-            document.getElementById('minSamplesLeafValue').textContent = minSamplesLeaf;
+            // 准备数据
+            const X = watermelonDataset.map(row => row.slice(0, -1));
+            const y = watermelonDataset.map(row => row[row.length - 1]);
             
-            // 准备训练参数
-            const params = {
-                max_depth: maxDepth,
-                min_samples_split: minSamplesSplit,
-                min_samples_leaf: minSamplesLeaf,
-                criterion: criterion
-            };
+            // 创建并训练决策树
+            const clf = new DecisionTreeClassifier(criterion, maxDepth, minSamplesSplit, minSamplesLeaf);
+            clf.fit(X, y);
             
-            // 显示加载状态
-            document.getElementById('trainAccuracy').textContent = '训练中...';
-            document.getElementById('testAccuracy').textContent = '训练中...';
-            document.getElementById('treeDepth').textContent = '训练中...';
-            document.getElementById('leafNodes').textContent = '训练中...';
-            document.getElementById('trainTime').textContent = '训练中...';
+            const endTime = performance.now();
+            const trainingTime = (endTime - startTime).toFixed(1);
             
-            // 调用Python后端训练决策树
-            const result = await trainDecisionTree(params);
+            // 计算准确率
+            const accuracy = clf.score(X, y);
+            const treeDepth = clf.getDepth();
+            const leafNodes = clf.getLeafCount();
             
-            if (result && result.success) {
-                // 更新显示
-                document.getElementById('trainAccuracy').textContent = result.train_accuracy.toFixed(3);
-                document.getElementById('testAccuracy').textContent = result.test_accuracy.toFixed(3);
-                document.getElementById('treeDepth').textContent = result.tree_depth;
-                document.getElementById('leafNodes').textContent = result.leaf_count;
-                document.getElementById('trainTime').textContent = result.train_time.toFixed(1) + 'ms';
-                
-                // 检查过拟合和欠拟合
-                const overfittingWarning = document.getElementById('overfittingWarning');
-                const underfittingWarning = document.getElementById('underfittingWarning');
-                
-                if (result.train_accuracy - result.test_accuracy > 0.1) {
-                    overfittingWarning.style.display = 'block';
-                } else {
-                    overfittingWarning.style.display = 'none';
-                }
-                
-                if (result.train_accuracy < 0.8 && result.test_accuracy < 0.8) {
-                    underfittingWarning.style.display = 'block';
-                } else {
-                    underfittingWarning.style.display = 'none';
-                }
-                
-                // 显示决策树结构
-                displayTreeStructure(result.tree_structure);
-                
-                // 决策树可视化部分已移除
-            } else {
-                console.error('训练失败:', result ? result.error : '未知错误');
-                // 显示错误信息
-                document.getElementById('trainAccuracy').textContent = '错误';
-                document.getElementById('testAccuracy').textContent = '错误';
-                document.getElementById('treeDepth').textContent = '错误';
-                document.getElementById('leafNodes').textContent = '错误';
-                document.getElementById('trainTime').textContent = '错误';
-                
-                // 显示错误详情
-                const errorMsg = result ? result.error : '无法连接到服务器，请确保Flask服务器正在运行';
-                document.getElementById('treeStructure').innerHTML = `<p style="color: #dc3545;">❌ 训练失败: ${errorMsg}</p>`;
+            // 更新显示
+            document.getElementById('accuracy').textContent = (accuracy * 100).toFixed(1) + '%';
+            document.getElementById('tree-depth').textContent = treeDepth;
+            document.getElementById('leaf-nodes').textContent = leafNodes;
+            document.getElementById('training-time').textContent = trainingTime + 'ms';
+            
+            // 生成树结构
+            displayTreeStructure(clf);
+            
+            // 检查过拟合和欠拟合
+            checkOverfittingUnderfitting(accuracy, treeDepth);
+        }
+        
+        // 检查过拟合和欠拟合
+        function checkOverfittingUnderfitting(accuracy, depth) {
+            const overfittingWarning = document.getElementById('overfitting-warning');
+            const underfittingWarning = document.getElementById('underfitting-warning');
+            
+            // 隐藏所有警告
+            overfittingWarning.style.display = 'none';
+            underfittingWarning.style.display = 'none';
+            
+            // 过拟合检测：准确率过高且树过深
+            if (accuracy >= 1.0 && depth > 5) {
+                overfittingWarning.style.display = 'block';
+            }
+            // 欠拟合检测：准确率较低且树较浅
+            else if (accuracy < 0.8 && depth <= 2) {
+                underfittingWarning.style.display = 'block';
             }
         }
-
-
         
-        // 显示决策树文本结构
-        function displayTreeStructure(treeStructure) {
-            const container = document.getElementById('treeStructure');
+        // 显示决策树结构
+        function displayTreeStructure(clf) {
+            const container = document.getElementById('tree-structure');
             if (!container) return;
             
+            const treeText = clf.generateTreeText();
+            
             container.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 10px; color: #333;">🌳 决策树结构</div>
-                <pre style="font-size: 12px; line-height: 1.4; background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto;">${treeStructure}</pre>
+                <div style="font-weight: bold; margin-bottom: 15px; color: #333; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">🌳</span>
+                    <span>决策树结构</span>
+                    <span style="background: linear-gradient(45deg, #007bff, #28a745); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">文本格式</span>
+                </div>
+                <div style="
+                    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                    border: 1px solid #dee2e6;
+                    border-radius: 12px;
+                    padding: 20px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    overflow-x: auto;
+                    min-height: 200px;
+                ">
+                    <pre style="
+                        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        margin: 0;
+                        padding: 0;
+                        white-space: pre-wrap;
+                        word-wrap: break-word;
+                        color: #333;
+                    ">${treeText}</pre>
+                </div>
+                <div style="margin-top: 15px; font-size: 12px; color: #6c757d; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                    <span style="display: flex; align-items: center; gap: 5px;">
+                        <span style="color: #28a745; font-weight: bold;">🍉</span>
+                        好瓜
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 5px;">
+                        <span style="color: #dc3545; font-weight: bold;">🚫</span>
+                        坏瓜
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 5px;">
+                        <span style="color: #007bff; font-weight: bold;">?</span>
+                        决策节点
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 5px;">
+                        <span style="color: #17a2b8; font-weight: bold;">├─</span>
+                        分支条件
+                    </span>
+                </div>
             `;
         }
+        
+        // 参数控制事件监听
+        document.addEventListener('DOMContentLoaded', function() {
+            // 参数控制
+            document.getElementById('max-depth').addEventListener('input', trainDecisionTree);
+            document.getElementById('min-samples-split').addEventListener('input', trainDecisionTree);
+            document.getElementById('min-samples-leaf').addEventListener('input', trainDecisionTree);
+            document.getElementById('criterion').addEventListener('change', trainDecisionTree);
+        });
         
 
 
@@ -1851,28 +1429,66 @@ if __name__ == '__main__':
             });
         }
 
+        // 初始化数据集预览
+        function initializeDatasetPreview() {
+            // 填充数据集预览表格
+            const tableBody = document.getElementById('dataset-preview');
+            if (tableBody) {
+                // 清空现有内容
+                tableBody.innerHTML = '';
+                
+                // 添加前5行数据
+                watermelonDataset.slice(0, 5).forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    
+                    // 添加编号列
+                    const numberTd = document.createElement('td');
+                    numberTd.textContent = index + 1;
+                    tr.appendChild(numberTd);
+                    
+                    // 添加数据列
+                    row.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                });
+                
+                // 如果数据超过5行，添加省略号
+                if (watermelonDataset.length > 5) {
+                    const tr = document.createElement('tr');
+                    for (let i = 0; i < 10; i++) {
+                        const td = document.createElement('td');
+                        td.textContent = '...';
+                        td.style.textAlign = 'center';
+                        td.style.fontStyle = 'italic';
+                        td.style.color = '#6c757d';
+                        tr.appendChild(td);
+                    }
+                    tableBody.appendChild(tr);
+                }
+            }
+        }
+
         // 初始化
-        document.addEventListener('DOMContentLoaded', async function() {
-            // 加载数据集信息
-            await loadDatasetInfo();
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化数据集预览
+            initializeDatasetPreview();
             
             // 初始化决策树
-            await updateDecisionTree();
+            trainDecisionTree();
             
             // 平滑滚动
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
-                    const href = this.getAttribute('href');
-                    // 检查href是否有效（不为空且不只是'#'）
-                    if (href && href.length > 1 && href !== '#') {
-                        const target = document.querySelector(href);
-                        if (target) {
-                            target.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'start'
-                            });
-                        }
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
                     }
                 });
             });
