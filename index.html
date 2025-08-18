@@ -204,6 +204,27 @@
         <span style="color: white; font-size: 20px; font-weight: bold;">↑</span>
     </div>
 
+    <!-- AI智能体聊天按钮 -->
+    <div id="aiChatBtn" style="position: fixed; bottom: 100px; right: 30px; width: 60px; height: 60px; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; z-index: 1001; box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: pulse 2s infinite;">
+        <span style="color: white; font-size: 24px;">🤖</span>
+    </div>
+
+    <!-- AI智能体聊天窗口 -->
+    <div id="aiChatWindow" style="position: fixed; bottom: 180px; right: 30px; width: 350px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1002; transform: scale(0) translateY(20px); opacity: 0; transition: all 0.3s ease; overflow: hidden;">
+        <!-- 聊天窗口头部 -->
+        <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🤖</span>
+                <span style="font-weight: bold;">AI学习助手</span>
+            </div>
+            <div id="closeChatBtn" style="cursor: pointer; font-size: 20px; padding: 5px; border-radius: 50%; transition: background 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='transparent'">×</div>
+        </div>
+        <!-- 聊天窗口内容 -->
+        <div style="height: calc(100% - 60px); position: relative;">
+            <iframe id="cozeIframe" src="https://www.coze.cn/store/agent/7538435095590567971?from=bots_card&bid=6h8pl7bk45g0r" style="width: 100%; height: 100%; border: none; background: #f5f5f5;" frameborder="0"></iframe>
+        </div>
+    </div>
+
     <div class="container">
         <div class="header fade-in">
             <h1>🤖 人工智能实验讲义</h1>
@@ -396,6 +417,13 @@
                     <h3 style="margin-bottom: 10px; color: #2c3e50;">edX - AI课程</h3>
                     <p style="color: #666; font-size: 0.9em;">MIT、哈佛等顶尖大学的人工智能课程，学术性强</p>
                 </a>
+                
+                <div class="resource-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; text-decoration: none; transition: all 0.3s ease; display: block; cursor: pointer; position: relative;" onclick="document.getElementById('aiChatBtn').click();">
+                    <div style="font-size: 1.8em; margin-bottom: 10px;">🤖</div>
+                    <h3 style="margin-bottom: 10px; color: #2c3e50;">Coze AI智能体 <span style="background: #4CAF50; color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">内嵌</span></h3>
+                    <p style="color: #666; font-size: 0.9em;">智能对话助手，提供AI问答和学习辅导服务。点击即可在当前页面直接对话！</p>
+                    <div style="position: absolute; top: 15px; right: 15px; background: #4CAF50; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 12px;">💬</div>
+                </div>
             </div>
             
             <div style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px;">
@@ -459,6 +487,18 @@
                 }
             }
             
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 0 rgba(76, 175, 80, 0.7);
+                }
+                70% {
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 10px rgba(76, 175, 80, 0);
+                }
+                100% {
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 0 rgba(76, 175, 80, 0);
+                }
+            }
+            
             .resource-card:hover {
                 transform: translateY(-5px);
                 box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
@@ -500,6 +540,58 @@
         backToTopBtn.addEventListener('mouseleave', function() {
             this.style.transform = window.pageYOffset > 300 ? 'translateY(0) scale(1)' : 'translateY(20px) scale(1)';
             this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+        });
+
+        // AI聊天窗口功能
+        const aiChatBtn = document.getElementById('aiChatBtn');
+        const aiChatWindow = document.getElementById('aiChatWindow');
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        let isChatOpen = false;
+
+        // 打开聊天窗口
+        aiChatBtn.addEventListener('click', function() {
+            if (!isChatOpen) {
+                aiChatWindow.style.transform = 'scale(1) translateY(0)';
+                aiChatWindow.style.opacity = '1';
+                aiChatBtn.style.transform = 'scale(0.9)';
+                isChatOpen = true;
+            } else {
+                closeChatWindow();
+            }
+        });
+
+        // 关闭聊天窗口
+        closeChatBtn.addEventListener('click', function() {
+            closeChatWindow();
+        });
+
+        function closeChatWindow() {
+            aiChatWindow.style.transform = 'scale(0) translateY(20px)';
+            aiChatWindow.style.opacity = '0';
+            aiChatBtn.style.transform = 'scale(1)';
+            isChatOpen = false;
+        }
+
+        // 聊天按钮悬停效果
+        aiChatBtn.addEventListener('mouseenter', function() {
+            if (!isChatOpen) {
+                this.style.transform = 'scale(1.1)';
+                this.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+            }
+        });
+
+        aiChatBtn.addEventListener('mouseleave', function() {
+            if (!isChatOpen) {
+                this.style.transform = 'scale(1)';
+                this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.2)';
+            }
+        });
+
+        // 点击窗口外部关闭聊天窗口
+        document.addEventListener('click', function(e) {
+            if (isChatOpen && !aiChatWindow.contains(e.target) && !aiChatBtn.contains(e.target)) {
+                closeChatWindow();
+            }
         });
     </script>
 </body>
