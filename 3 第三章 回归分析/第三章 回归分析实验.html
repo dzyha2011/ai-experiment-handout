@@ -366,6 +366,14 @@
             border-radius: 4px;
             background: #f8f9fa;
             margin: 0 0.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .fill-blank:focus {
+            outline: none;
+            border: 2px solid #007bff;
+            background: white;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
 
         .progress-bar {
@@ -1913,37 +1921,113 @@ print(f"截距: {model.<input type="text" class="fill-blank" id="blank7" placeho
             link.click();
         }
 
-        // 测验功能
-        function checkQuiz() {
+        // 选择题选项选择功能
+        function selectOption(element, questionId, option) {
+            // 获取当前问题的所有选项
+            const parentQuestion = element.closest('.quiz-question');
+            const options = parentQuestion.querySelectorAll('.quiz-option');
+            
+            // 移除同一问题中其他选项的选中状态
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // 添加选中状态到当前选项
+            element.classList.add('selected');
+            
+            // 存储用户的选择
+            window[questionId + '_selected'] = option;
+        }
+        
+        // 检查选择题答案
+        function checkQuizAnswers() {
             const answers = {
-                q1: 'b',
-                q2: 'c',
-                q3: 'a'
+                q1: 'A', // 最小化残差平方和
+                q2: 'A', // [0, 1]
+                q3: 'B'  // 可以实现特征选择
             };
             
             let score = 0;
             let total = Object.keys(answers).length;
+            let results = [];
             
             for (let question in answers) {
-                const selected = document.querySelector(`input[name="${question}"]:checked`);
-                const feedback = document.getElementById(`${question}-feedback`);
+                const selected = window[question + '_selected'];
                 
                 if (selected) {
-                    if (selected.value === answers[question]) {
+                    if (selected === answers[question]) {
                         score++;
-                        feedback.innerHTML = '<span style="color: green;"><i class="fas fa-check"></i> 正确！</span>';
+                        results.push(`<div class="alert alert-success"><i class="fas fa-check"></i> 问题 ${question.substring(1)}: 正确！</div>`);
                     } else {
-                        feedback.innerHTML = '<span style="color: red;"><i class="fas fa-times"></i> 错误，正确答案是: ' + answers[question].toUpperCase() + '</span>';
+                        results.push(`<div class="alert alert-danger"><i class="fas fa-times"></i> 问题 ${question.substring(1)}: 错误，正确答案是 ${answers[question]}</div>`);
                     }
                 } else {
-                    feedback.innerHTML = '<span style="color: orange;"><i class="fas fa-exclamation"></i> 请选择一个答案</span>';
+                    results.push(`<div class="alert alert-warning"><i class="fas fa-exclamation"></i> 问题 ${question.substring(1)}: 未作答</div>`);
                 }
             }
             
             document.getElementById('quiz-result').innerHTML = `
                 <h3>测验结果: ${score}/${total}</h3>
                 <p>得分率: ${(score/total*100).toFixed(1)}%</p>
+                ${results.join('')}
             `;
+            
+            // 更新学习进度
+            updateLearningProgress(score / total * 100 / 2); // 选择题占总进度的一半
+        }
+        
+        // 检查代码填空答案
+        function checkFillBlanks() {
+            const answers = {
+                blank1: '0.2',
+                blank2: 'LinearRegression()',
+                blank3: 'fit',
+                blank4: 'y_test',
+                blank5: 'y_pred',
+                blank6: 'coef_',
+                blank7: 'intercept_'
+            };
+            
+            let score = 0;
+            let total = Object.keys(answers).length;
+            let results = [];
+            
+            for (let blank in answers) {
+                const input = document.getElementById(blank);
+                const userAnswer = input ? input.value.trim() : '';
+                
+                if (userAnswer === answers[blank]) {
+                    score++;
+                    input.style.backgroundColor = '#d4edda';
+                    input.style.borderColor = '#28a745';
+                    results.push(`<div class="alert alert-success"><i class="fas fa-check"></i> ${blank}: 正确！</div>`);
+                } else {
+                    input.style.backgroundColor = '#f8d7da';
+                    input.style.borderColor = '#dc3545';
+                    results.push(`<div class="alert alert-danger"><i class="fas fa-times"></i> ${blank}: 错误，正确答案是 ${answers[blank]}</div>`);
+                }
+            }
+            
+            document.getElementById('fill-blank-result').innerHTML = `
+                <h3>填空结果: ${score}/${total}</h3>
+                <p>得分率: ${(score/total*100).toFixed(1)}%</p>
+                ${results.join('')}
+            `;
+            
+            // 更新学习进度
+            updateLearningProgress(score / total * 100 / 2 + 50); // 代码填空占总进度的一半，从50%开始
+        }
+        
+        // 更新学习进度
+        function updateLearningProgress(percentage) {
+            const progressBar = document.getElementById('learning-progress');
+            const progressText = document.getElementById('progress-text');
+            
+            if (progressBar && progressText) {
+                const currentProgress = parseFloat(progressBar.style.width) || 0;
+                const newProgress = Math.max(currentProgress, percentage);
+                
+                progressBar.style.width = newProgress + '%';
+                progressText.textContent = '完成度: ' + Math.round(newProgress) + '%';
+            }
         }
 
         // 页面加载完成后初始化
